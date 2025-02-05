@@ -38,4 +38,5 @@ terraform.rc
 
 .DS_Store
 .terraform.lock.hcl
-keys/serverless-account-keys.json
+telegram.zip
+keys/
