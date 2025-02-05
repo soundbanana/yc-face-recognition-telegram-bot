@@ -33,9 +33,9 @@ class CommandHandler:
     def __init__(self, command):
         self.command = command
 
-    def process(self) -> MessageResponse:
+    def process(command) -> str:
         """Processes the command and returns an appropriate response."""
-        if self.command == "/start" or self.command == "/help":
-            return MessageResponse(MESSAGES["start_help"], MessageResponse.COMMAND)
+        if command == "/start" or command == "/help":
+            return MESSAGES["start_help"]
         else:
             raise ProcessingError(MESSAGES["unknown_command"])

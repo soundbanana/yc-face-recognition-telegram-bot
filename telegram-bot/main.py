@@ -52,8 +52,8 @@ def process_message(message, chat_id) -> None:
         logger.info(response)
 
         if response.is_command():
-            commandHandler = CommandHandler(response.message, chat_id)
-            send_message(chat_id, commandHandler.process().message)
+            command_message = CommandHandler.process(response.message)
+            send_message(chat_id, command_message)
             return
 
         elif response.is_text():
