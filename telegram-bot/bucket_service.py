@@ -42,7 +42,7 @@ def upload_to_bucket(bucket_name, key, image):
     try:
         s3.put_object(
             Bucket=bucket_name,
-            Key=key,
+            Key=f"{key}.jpeg",
             Body=image,
             ContentType="image/jpeg"
         )

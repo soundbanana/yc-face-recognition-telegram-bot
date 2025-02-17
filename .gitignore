@@ -40,3 +40,4 @@ terraform.rc
 .terraform.lock.hcl
 telegram-bot.zip
 keys/
+face-recognition.zip
