@@ -1,9 +1,10 @@
 import json
 import logging
 import requests
-
-from constants import MESSAGES, TELEGRAM_API_URL
-from utils import ProcessingError, CommandHandler, MessageResponse
+import hashlib
+from constants import MESSAGES, TELEGRAM_API_URL, BUCKET_PHOTOS_NAME
+from helpers import ProcessingError, CommandHandler, MessageResponse
+from bucket_service import save_original_photo_to_bucket
 
 # Set up a logger
 logger = logging.getLogger()
@@ -60,7 +61,10 @@ def process_message(message, chat_id) -> None:
             send_message(chat_id, "Отправлен текст")
         
         elif response.is_photo():
-            send_message(chat_id, "Отправлена фотография")
+            file_id = message['photo'][-1]['file_id']
+            
+            send_message(chat_id, f"Отправлена фотография {file_id}")
+            save_original_photo_to_bucket(BUCKET_PHOTOS_NAME, file_id)
 
     except ProcessingError as e:
         logger.error(f"Processing error: {e}")
