@@ -23,6 +23,6 @@ resource "yandex_resourcemanager_folder_iam_member" "sa_storage_viewer_iam" {
 
 resource "yandex_resourcemanager_folder_iam_member" "sa_ymq_writer_iam" {
   folder_id = var.FOLDER_ID
-  role      = "ymq.writer"
+  role      = "ymq.admin"
   member    = "serviceAccount:${yandex_iam_service_account.sa.id}"
 }

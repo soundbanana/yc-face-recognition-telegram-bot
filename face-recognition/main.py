@@ -51,7 +51,6 @@ def handler(event, context):
     try:
         check_memory()
 
-        bucket_id = event['messages'][0]['details']['bucket_id']
         object_id = event['messages'][0]['details']['object_id']
         image_path = f"/function/storage/{BUCKET_PHOTOS_NAME}/{object_id}"
 
