@@ -10,8 +10,8 @@ resource "yandex_function" "func" {
   environment = {
     "TELEGRAM_BOT_TOKEN" = var.TELEGRAM_BOT_TOKEN
     "BUCKET_PHOTOS_NAME" = var.BUCKET_PHOTOS_NAME
-    "SA_ACCESS_KEY" = yandex_iam_service_account_static_access_key.sa-static-key.access_key
-    "SA_SECRET_KEY" = yandex_iam_service_account_static_access_key.sa-static-key.secret_key
+    "SA_ACCESS_KEY"      = yandex_iam_service_account_static_access_key.sa-static-key.access_key
+    "SA_SECRET_KEY"      = yandex_iam_service_account_static_access_key.sa-static-key.secret_key
   }
 
   content {
@@ -33,8 +33,8 @@ resource "yandex_function_iam_binding" "tg_bot_iam" {
 }
 
 resource "yandex_storage_bucket" "bucket_photos" {
-    bucket        = var.BUCKET_PHOTOS_NAME
-    force_destroy = true
+  bucket        = var.BUCKET_PHOTOS_NAME
+  force_destroy = true
 }
 
 variable "BUCKET_PHOTOS_NAME" {

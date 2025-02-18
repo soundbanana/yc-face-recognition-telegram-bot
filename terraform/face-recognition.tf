@@ -7,18 +7,18 @@ resource "yandex_function" "func_recognizer" {
   service_account_id = yandex_iam_service_account.sa.id
   user_hash          = archive_file.face_recognition_code.output_sha256
 
-    environment = {
-    "TELEGRAM_BOT_TOKEN" = var.TELEGRAM_BOT_TOKEN
+  environment = {
     "BUCKET_PHOTOS_NAME" = var.BUCKET_PHOTOS_NAME
-    "SA_ACCESS_KEY" = yandex_iam_service_account_static_access_key.sa-static-key.access_key
-    "SA_SECRET_KEY" = yandex_iam_service_account_static_access_key.sa-static-key.secret_key
+    "SA_ACCESS_KEY"      = yandex_iam_service_account_static_access_key.sa-static-key.access_key
+    "SA_SECRET_KEY"      = yandex_iam_service_account_static_access_key.sa-static-key.secret_key
+    "QUEUE_ID"           = yandex_message_queue.task_queue.id
   }
 
   content {
     zip_filename = archive_file.face_recognition_code.output_path
   }
 
-   mounts {
+  mounts {
     name = yandex_storage_bucket.bucket_photos.bucket
     mode = "ro"
     object_storage {
@@ -48,6 +48,13 @@ resource "yandex_function_trigger" "bucket_photos_trigger" {
   }
 }
 
+resource "yandex_message_queue" "task_queue" {
+  name                      = var.TASK_QUEUE_NAME
+  receive_wait_time_seconds = 20
+  access_key                = yandex_iam_service_account_static_access_key.sa-static-key.access_key
+  secret_key                = yandex_iam_service_account_static_access_key.sa-static-key.secret_key
+}
+
 variable "RECOGNIZER_FUNCTION_NAME" {
   type        = string
   description = "Name for the recognizer function in Yandex Cloud"
@@ -56,4 +63,9 @@ variable "RECOGNIZER_FUNCTION_NAME" {
 variable "BUCKET_PHOTOS_TRIGGER" {
   type        = string
   description = "Name for trigger that activates when the images is uploaded to BUCKET_PHOTOS"
+}
+
+variable "TASK_QUEUE_NAME" {
+  type        = string
+  description = "Name for queue that has face cut tasks"
 }
