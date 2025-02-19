@@ -4,7 +4,7 @@ import requests
 import hashlib
 from constants import MESSAGES, TELEGRAM_API_URL
 from helpers import ProcessingError, CommandHandler, MessageResponse
-from bucket_service import save_original_photo_to_bucket
+from bucket_service import save_original_photo_to_bucket, rename_face
 
 # Set up a logger
 logger = logging.getLogger()
@@ -63,12 +63,23 @@ def process_message(message, chat_id):
             if command_message == MESSAGES["start_help"]:
                 send_message(chat_id, command_message)
             else:
-                send_photo(chat_id, command_message, "Ответом на это сообщение пришлите как зовут этого человека")
+                send_photo(chat_id, command_message, f"Ответом на это сообщение пришлите как зовут этого человека\n{command_message.split("?face=")[1]}")
             return
 
         elif response.is_text():
-            send_message(chat_id, "Отправлен текст")
-            return
+            if reply_message := message.get("reply_to_message", {}):
+                name = message.get("text")
+                file_id = reply_message.get("caption").split("\n")[1]
+
+                if not file_id:
+                    raise ProcessingError("Я ничего не понял. Попробуйте еще раз")
+
+                rename_face(name, file_id)
+                send_message(chat_id, f"Теперь его зовут {name}.\n Можешь проверить написав /faces {name}")    
+                return
+            else:
+                send_message(chat_id, "Отправлен текст")
+                return
         
         elif response.is_photo():
             file_id = message['photo'][-1]['file_id']

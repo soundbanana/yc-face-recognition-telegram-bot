@@ -80,3 +80,38 @@ def get_unknown_faces():
     except Exception as e:
         logger.error(f"Ошибка при получении списка объектов из S3: {e}")
     return unknown_faces
+
+def get_file__by_faces():
+    """Получает список фотографий с префиксом 'unknown-' из S3."""
+    unknown_faces = []
+    try:
+        response = s3.list_objects_v2(Bucket=BUCKET_FACES_NAME, Prefix="unknown-")
+        if "Contents" in response:
+            unknown_faces = [obj['Key'] for obj in response['Contents']]
+    except Exception as e:
+        logger.error(f"Ошибка при получении списка объектов из S3: {e}")
+    return unknown_faces
+
+def rename_face(name, file_id):
+    try:
+        print(123)
+        old_filename = file_id
+
+        template_file_name = old_filename.split("unknown-")[1]
+
+        new_filename = f"{name.lower()}-{template_file_name}.jpg"
+
+        print(old_filename)
+        print(new_filename)
+        
+        s3.copy_object(
+            CopySource={'Bucket': BUCKET_FACES_NAME, 'Key': old_filename},
+            Bucket=BUCKET_FACES_NAME,
+            Key=new_filename
+        )
+        
+        # Удаляем исходный объект
+        s3.delete_object(Bucket=BUCKET_FACES_NAME, Key=old_filename)
+    except Exception as e: 
+        print(str(e))
+        raise e
