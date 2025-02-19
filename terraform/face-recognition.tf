@@ -50,6 +50,7 @@ resource "yandex_function_trigger" "bucket_photos_trigger" {
 
 resource "yandex_message_queue" "task_queue" {
   name                      = var.TASK_QUEUE_NAME
+  visibility_timeout_seconds = 600
   receive_wait_time_seconds = 20
   access_key                = yandex_iam_service_account_static_access_key.sa-static-key.access_key
   secret_key                = yandex_iam_service_account_static_access_key.sa-static-key.secret_key

@@ -8,6 +8,7 @@ FOLDER_ID = os.getenv("FOLDER_ID")
 SERVICE_ACCOUNT_API_KEY = os.getenv("SERVICE_ACCOUNT_API_KEY")
 
 BUCKET_PHOTOS_NAME = os.getenv("BUCKET_PHOTOS_NAME")
+BUCKET_FACES_NAME = os.getenv("BUCKET_FACES_NAME")
 
 # Service Account Keys
 SA_ACCESS_KEY = os.getenv("SA_ACCESS_KEY")
@@ -16,6 +17,8 @@ SA_SECRET_KEY = os.getenv("SA_SECRET_KEY")
 # API URLs
 TELEGRAM_API_URL = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
 TELEGRAM_FILE_URL = f"https://api.telegram.org/file/bot{TELEGRAM_BOT_TOKEN}"
+
+API_GATEWAY_URL = os.getenv("API_GATEWAY_URL")
 
 # Text messages
 MESSAGES = {

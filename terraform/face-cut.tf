@@ -10,6 +10,7 @@ resource "yandex_function" "func_face_cut" {
   environment = {
     "TELEGRAM_BOT_TOKEN" = var.TELEGRAM_BOT_TOKEN
     "BUCKET_PHOTOS_NAME" = var.BUCKET_PHOTOS_NAME
+    "BUCKET_FACES_NAME" = var.BUCKET_FACES_NAME
     "SA_ACCESS_KEY"      = yandex_iam_service_account_static_access_key.sa-static-key.access_key
     "SA_SECRET_KEY"      = yandex_iam_service_account_static_access_key.sa-static-key.secret_key
   }
@@ -23,6 +24,14 @@ resource "yandex_function" "func_face_cut" {
     mode = "rw"
     object_storage {
       bucket = yandex_storage_bucket.bucket_faces.bucket
+    }
+  }
+
+  mounts {
+    name = yandex_storage_bucket.bucket_photos.bucket
+    mode = "ro"
+    object_storage {
+      bucket = yandex_storage_bucket.bucket_photos.bucket
     }
   }
 }

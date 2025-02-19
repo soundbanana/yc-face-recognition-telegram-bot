@@ -2,7 +2,7 @@ import boto3
 import requests
 import logging
 import json
-from constants import SA_ACCESS_KEY, SA_SECRET_KEY, TELEGRAM_API_URL, TELEGRAM_FILE_URL
+from constants import SA_ACCESS_KEY, SA_SECRET_KEY, TELEGRAM_API_URL, TELEGRAM_FILE_URL, BUCKET_PHOTOS_NAME, BUCKET_FACES_NAME, API_GATEWAY_URL
 from helpers import ProcessingError
 
 logger = logging.getLogger()
@@ -38,10 +38,10 @@ def get_image_from_telegram(file_path: str):
         logger.error(f"Failed to download image: {e}", {"file_path": file_path})
         return None
 
-def upload_to_bucket(bucket_name, key, image):
+def upload_to_bucket(key, image):
     try:
         s3.put_object(
-            Bucket=bucket_name,
+            Bucket=BUCKET_PHOTOS_NAME,
             Key=f"{key}.jpeg",
             Body=image,
             ContentType="image/jpeg"
@@ -50,9 +50,33 @@ def upload_to_bucket(bucket_name, key, image):
         logger.error(f"Failed to upload to bucket: {e}")
         return None
     
-def save_original_photo_to_bucket(bucket_name, file_id):
-        file_path = get_file_path(file_id)
+def save_original_photo_to_bucket(file_id):
+    file_path = get_file_path(file_id)
 
-        image = get_image_from_telegram(file_path)
+    image = get_image_from_telegram(file_path)
 
-        upload_to_bucket(bucket_name, file_id, image)
+    upload_to_bucket(file_id, image)
+
+def process_getface_command():
+    """Обрабатывает команду /getface, отправляя фотографию через API Gateway."""
+    unknown_faces = get_unknown_faces()
+
+    if not unknown_faces:
+        return None, "Нет новых фотографий"
+
+    # Берем первое фото из списка
+    face_key = unknown_faces[0]
+    photo_url = f"{API_GATEWAY_URL}/?face={face_key}"
+
+    return photo_url, None
+
+def get_unknown_faces():
+    """Получает список фотографий с префиксом 'unknown-' из S3."""
+    unknown_faces = []
+    try:
+        response = s3.list_objects_v2(Bucket=BUCKET_FACES_NAME, Prefix="unknown-")
+        if "Contents" in response:
+            unknown_faces = [obj['Key'] for obj in response['Contents']]
+    except Exception as e:
+        logger.error(f"Ошибка при получении списка объектов из S3: {e}")
+    return unknown_faces

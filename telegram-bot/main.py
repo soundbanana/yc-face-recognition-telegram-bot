@@ -2,7 +2,7 @@ import json
 import logging
 import requests
 import hashlib
-from constants import MESSAGES, TELEGRAM_API_URL, BUCKET_PHOTOS_NAME
+from constants import MESSAGES, TELEGRAM_API_URL
 from helpers import ProcessingError, CommandHandler, MessageResponse
 from bucket_service import save_original_photo_to_bucket
 
@@ -17,6 +17,11 @@ def send_message(chat_id, text):
     data = {'chat_id': chat_id, 'text': text}
     return requests.post(url, data=data)
 
+def send_photo(chat_id, photo_url, caption):
+    url = f"{TELEGRAM_API_URL}/sendPhoto"
+    data = {'chat_id': chat_id, 'photo': photo_url, 'caption': caption}
+    return requests.post(url, data=data)
+
 def get_message_id(processing_message):
     """Extracts the message ID from the Telegram response."""
     return processing_message.json().get("result", {}).get("message_id")
@@ -28,7 +33,7 @@ def delete_message(chat_id, message_id):
     r = requests.post(url, data=data)
     return r
 
-def get_message_type(message, chat_id):
+def get_message_type(message):
     """Processes the message and returns the appropriate response."""
     # Check if the message contains a photo
     if photo := message.get("photo"):  # If the message contains a photo
@@ -45,26 +50,32 @@ def get_message_type(message, chat_id):
 
     raise ProcessingError(MESSAGES["incorrect_input"])
 
-def process_message(message, chat_id) -> None:
+def process_message(message, chat_id):
     """Processes the incoming message and responds accordingly."""
     try:
-        response = get_message_type(message, chat_id)
+        response = get_message_type(message)
 
         logger.info(response)
 
         if response.is_command():
             command_message = CommandHandler.process(response.message)
-            send_message(chat_id, command_message)
+
+            if command_message == MESSAGES["start_help"]:
+                send_message(chat_id, command_message)
+            else:
+                send_photo(chat_id, command_message, "Ответом на это сообщение пришлите как зовут этого человека")
             return
 
         elif response.is_text():
             send_message(chat_id, "Отправлен текст")
+            return
         
         elif response.is_photo():
             file_id = message['photo'][-1]['file_id']
             
             send_message(chat_id, f"Отправлена фотография {file_id}")
-            save_original_photo_to_bucket(BUCKET_PHOTOS_NAME, file_id)
+            save_original_photo_to_bucket(file_id)
+            return
 
     except ProcessingError as e:
         logger.error(f"Processing error: {e}")

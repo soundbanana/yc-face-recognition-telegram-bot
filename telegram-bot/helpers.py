@@ -33,9 +33,16 @@ class CommandHandler:
     def __init__(self, command):
         self.command = command
 
-    def process(command) -> str:
+    def process(command):
+        from bucket_service import process_getface_command
         """Processes the command and returns an appropriate response."""
         if command == "/start" or command == "/help":
             return MESSAGES["start_help"]
+        elif command == "/getface":
+            photo_url, error = process_getface_command()
+            if error:
+                raise ProcessingError(error)
+            elif error == None:
+                return photo_url
         else:
             raise ProcessingError(MESSAGES["unknown_command"])

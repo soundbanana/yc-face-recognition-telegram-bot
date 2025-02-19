@@ -10,13 +10,57 @@ resource "yandex_function" "func" {
   environment = {
     "TELEGRAM_BOT_TOKEN" = var.TELEGRAM_BOT_TOKEN
     "BUCKET_PHOTOS_NAME" = var.BUCKET_PHOTOS_NAME
+    "BUCKET_FACES_NAME" = var.BUCKET_FACES_NAME
     "SA_ACCESS_KEY"      = yandex_iam_service_account_static_access_key.sa-static-key.access_key
     "SA_SECRET_KEY"      = yandex_iam_service_account_static_access_key.sa-static-key.secret_key
+    "API_GATEWAY_URL"    = "https://${yandex_api_gateway.api_gateway.domain}/"
   }
 
   content {
     zip_filename = archive_file.telegram_bot_code.output_path
   }
+}
+
+resource "yandex_api_gateway" "api_gateway" {
+  name        = "vvot39-apigw"
+  description = "API Gateway для получения фотографий из Object Storage"
+
+  spec = <<EOT
+  openapi: 3.0.0
+  info:
+    title: Face Image API
+    version: 1.0.0
+  paths:
+    /:
+      get:
+        summary: "Получить фото по ключу"
+        parameters:
+          - name: face
+            in: query
+            required: true
+            schema:
+              type: string
+        responses:
+          "200":
+            description: "Фото"
+            content:
+              image/jpeg:
+                schema:
+                  type: string
+                  format: binary
+          "400":
+            description: "Ошибка, если ключ не передан"
+          "404":
+            description: "Фото не найдено"
+        x-yc-apigateway-integration:
+          type: object_storage
+          bucket: "${var.BUCKET_FACES_NAME}"
+          object: "{face}"
+          service_account_id: "${yandex_iam_service_account.sa.id}"
+          headers:
+              Content-Type: "{object.response.content-type}"
+              Content-Disposition: "inline"
+  EOT
 }
 
 # Package the Telegram bot code
