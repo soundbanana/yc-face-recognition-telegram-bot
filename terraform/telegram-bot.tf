@@ -35,7 +35,7 @@ resource "yandex_api_gateway" "api_gateway" {
       get:
         summary: "Получить фото по ключу"
         parameters:
-          - name: face
+          - name: key
             in: query
             required: true
             schema:
@@ -55,13 +55,44 @@ resource "yandex_api_gateway" "api_gateway" {
         x-yc-apigateway-integration:
           type: object_storage
           bucket: "${var.BUCKET_FACES_NAME}"
-          object: "{face}"
+          object: "{key}"
+          service_account_id: "${yandex_iam_service_account.sa.id}"
+          headers:
+              Content-Type: "{object.response.content-type}"
+              Content-Disposition: "inline"
+
+    /getPhotoByName:
+      get:
+        summary: "Получить оригиналы фото по имени"
+        parameters:
+          - name: key
+            in: query
+            required: true
+            schema:
+              type: string
+        responses:
+          "200":
+            description: "Фото"
+            content:
+              image/jpeg:
+                schema:
+                  type: string
+                  format: binary
+          "400":
+            description: "Ошибка, если ключ не передан"
+          "404":
+            description: "Фото не найдено"
+        x-yc-apigateway-integration:
+          type: object_storage
+          bucket: "${var.BUCKET_PHOTOS_NAME}"
+          object: "{key}"
           service_account_id: "${yandex_iam_service_account.sa.id}"
           headers:
               Content-Type: "{object.response.content-type}"
               Content-Disposition: "inline"
   EOT
 }
+
 
 # Package the Telegram bot code
 resource "archive_file" "telegram_bot_code" {

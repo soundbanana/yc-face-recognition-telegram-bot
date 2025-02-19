@@ -66,7 +66,7 @@ def process_getface_command():
 
     # Берем первое фото из списка
     face_key = unknown_faces[0]
-    photo_url = f"{API_GATEWAY_URL}/?face={face_key}"
+    photo_url = f"{API_GATEWAY_URL}?key={face_key}"
 
     return photo_url, None
 
@@ -81,28 +81,13 @@ def get_unknown_faces():
         logger.error(f"Ошибка при получении списка объектов из S3: {e}")
     return unknown_faces
 
-def get_file__by_faces():
-    """Получает список фотографий с префиксом 'unknown-' из S3."""
-    unknown_faces = []
-    try:
-        response = s3.list_objects_v2(Bucket=BUCKET_FACES_NAME, Prefix="unknown-")
-        if "Contents" in response:
-            unknown_faces = [obj['Key'] for obj in response['Contents']]
-    except Exception as e:
-        logger.error(f"Ошибка при получении списка объектов из S3: {e}")
-    return unknown_faces
-
 def rename_face(name, file_id):
     try:
-        print(123)
         old_filename = file_id
 
         template_file_name = old_filename.split("unknown-")[1]
 
-        new_filename = f"{name.lower()}-{template_file_name}.jpg"
-
-        print(old_filename)
-        print(new_filename)
+        new_filename = f"{name.lower()}-{template_file_name}"
         
         s3.copy_object(
             CopySource={'Bucket': BUCKET_FACES_NAME, 'Key': old_filename},
@@ -115,3 +100,24 @@ def rename_face(name, file_id):
     except Exception as e: 
         print(str(e))
         raise e
+
+def find_faces_by_name(name: str):
+    try:
+        response = s3.list_objects_v2(Bucket=BUCKET_FACES_NAME, Prefix=f"{name.lower()}-")
+        
+        if "Contents" not in response:
+            return []
+
+        for obj in response["Contents"]:
+            print(obj)
+        # Формируем список URL фотографий
+        photo_urls = [
+            f"{API_GATEWAY_URL}getPhotoByName?key={obj['Key'].split("--")[1]}"
+            for obj in response["Contents"]
+        ]
+
+        return photo_urls
+
+    except Exception as e:
+        logger.error(f"Ошибка при поиске фотографий для {name}: {e}")
+        return []

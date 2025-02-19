@@ -64,16 +64,13 @@ def draw_white_rectangle(image_path, coordinates, filename):
 def handler(event, context):
     try:
         print(event)
-        # Извлекаем данные из события
         message = json.loads(event['messages'][0]['details']['message']['body'])
         object_id = message['object_id']
         coordinates = message['rectangle']
 
-        # Формируем путь к изображению
         source_path = f"/function/storage/{BUCKET_PHOTOS_NAME}/{object_id}"
-        output_object_id = f"unknown-{str(uuid.uuid4())}-{object_id}"
-            
-        # Рисуем прямоугольник и сохраняем изображение
+        output_object_id = f"unknown-{str(uuid.uuid4())}--{object_id}"
+
         success = draw_white_rectangle(source_path, coordinates, output_object_id)
         
         if success:

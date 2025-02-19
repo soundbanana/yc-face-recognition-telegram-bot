@@ -19,6 +19,7 @@ def send_message(chat_id, text):
 
 def send_photo(chat_id, photo_url, caption):
     url = f"{TELEGRAM_API_URL}/sendPhoto"
+    print(photo_url)
     data = {'chat_id': chat_id, 'photo': photo_url, 'caption': caption}
     return requests.post(url, data=data)
 
@@ -43,8 +44,7 @@ def get_message_type(message):
         command_entity = next((e for e in entities if e.get("type") == "bot_command"), None)
 
         if command_entity:  # If the message is a command
-            command = text[command_entity["offset"]:command_entity["offset"] + command_entity["length"]]
-            return MessageResponse(command, MessageResponse.COMMAND)
+            return MessageResponse(text, MessageResponse.COMMAND)
 
         return MessageResponse(text, MessageResponse.TEXT)
 
@@ -62,8 +62,11 @@ def process_message(message, chat_id):
 
             if command_message == MESSAGES["start_help"]:
                 send_message(chat_id, command_message)
-            else:
-                send_photo(chat_id, command_message, f"Ответом на это сообщение пришлите как зовут этого человека\n{command_message.split("?face=")[1]}")
+            elif response.message.startswith("/find"):
+                for message in command_message:
+                    send_photo(chat_id, f"{message}", "")
+            elif response.message.startswith("/getface"):
+                send_photo(chat_id, command_message, f"Ответом на это сообщение пришлите как зовут этого человека\n{command_message.split("?key=")[1]}")
             return
 
         elif response.is_text():
@@ -75,7 +78,7 @@ def process_message(message, chat_id):
                     raise ProcessingError("Я ничего не понял. Попробуйте еще раз")
 
                 rename_face(name, file_id)
-                send_message(chat_id, f"Теперь его зовут {name}.\n Можешь проверить написав /faces {name}")    
+                send_message(chat_id, f"Теперь его зовут {name}.\n Можешь проверить написав /find {name}")    
                 return
             else:
                 send_message(chat_id, "Отправлен текст")

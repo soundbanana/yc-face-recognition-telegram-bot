@@ -34,7 +34,7 @@ class CommandHandler:
         self.command = command
 
     def process(command):
-        from bucket_service import process_getface_command
+        from bucket_service import process_getface_command, find_faces_by_name
         """Processes the command and returns an appropriate response."""
         if command == "/start" or command == "/help":
             return MESSAGES["start_help"]
@@ -43,6 +43,21 @@ class CommandHandler:
             if error:
                 raise ProcessingError(error)
             elif error == None:
+                print(photo_url)
+                print(123)
                 return photo_url
+        elif command.startswith("/find"):
+            parts = command.split(maxsplit=1)
+            print(parts)
+            if len(parts) < 2:
+                raise ProcessingError("Укажите имя после команды /find")
+
+            name = parts[1].strip()
+            if not name:
+                raise ProcessingError("Укажите имя после команды /find")
+
+            photo_urls = find_faces_by_name(name)
+            print(photo_urls)
+            return photo_urls
         else:
             raise ProcessingError(MESSAGES["unknown_command"])
